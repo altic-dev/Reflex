@@ -5,9 +5,8 @@ import {
   generateText,
   stepCountIs,
 } from "ai";
-import { z } from "zod";
+import { z } from "zod/v4";
 import { jsonrepair } from "jsonrepair";
-import { zodToJsonSchema } from "zod-to-json-schema";
 
 export type CreateToolSearchOptions = {
   tools: ToolSet;
@@ -65,10 +64,10 @@ Now select the relevant tools for the user query above:`;
             name,
             description: tools[name].description ?? "No description",
             inputSchema: tools[name].inputSchema
-              ? zodToJsonSchema(tools[name].inputSchema as z.ZodType)
+              ? z.toJSONSchema(tools[name].inputSchema as z.ZodType)
               : undefined,
             outputSchema: tools[name].outputSchema
-              ? zodToJsonSchema(tools[name].outputSchema as z.ZodType)
+              ? z.toJSONSchema(tools[name].outputSchema as z.ZodType)
               : undefined,
           }));
       }
@@ -85,10 +84,10 @@ Now select the relevant tools for the user query above:`;
         name,
         description: toolDef.description ?? "No description",
         inputSchema: toolDef.inputSchema
-          ? zodToJsonSchema(toolDef.inputSchema as z.ZodType)
+          ? z.toJSONSchema(toolDef.inputSchema as z.ZodType)
           : undefined,
         outputSchema: toolDef.outputSchema
-          ? zodToJsonSchema(toolDef.outputSchema as z.ZodType)
+          ? z.toJSONSchema(toolDef.outputSchema as z.ZodType)
           : undefined,
       }));
     },

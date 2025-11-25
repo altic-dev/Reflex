@@ -56,7 +56,6 @@
     "@ai-sdk/anthropic": "^2.0.47",
     "ai": "^5.0.101",
     "jsonrepair": "^3.13.1",
-    "zod": "^4.1.13",
-    "zod-to-json-schema": "^3.25.0"
+    "zod": "^4.1.13"
   }
 }

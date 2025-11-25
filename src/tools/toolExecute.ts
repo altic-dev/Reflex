@@ -1,5 +1,5 @@
 import { tool, type ToolSet } from "ai";
-import { z } from "zod";
+import { z } from "zod/v4";
 import * as vm from "node:vm";
 
 export type CreateToolExecuteOptions = {

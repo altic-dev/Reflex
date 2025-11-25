@@ -1,6 +1,6 @@
 import { generateText, stepCountIs, tool } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
-import { z } from "zod";
+import { z } from "zod/v4";
 import { createReflexTools } from "./createReflexTools";
 
 const dummyTools = {
@@ -21,7 +21,6 @@ const dummyTools = {
     }),
     execute: async ({ path, content }) => {
       console.log(`[writeFile] Writing to: ${path}`);
-      console.log(`[writeFile] Content: ${content.substring(0, 100)}...`);
       return { success: true, path };
     },
   }),
@@ -117,7 +116,7 @@ const dummyTools = {
     description: "Make an HTTP POST request to a URL with a JSON body",
     inputSchema: z.object({
       url: z.string(),
-      body: z.record(z.unknown()),
+      body: z.record(z.string(), z.unknown()),
     }),
     execute: async ({ url }) => {
       console.log(`[makeHttpPost] POST to: ${url}`);
@@ -138,7 +137,7 @@ const dummyTools = {
     description: "Insert a new record into a database table",
     inputSchema: z.object({
       table: z.string(),
-      data: z.record(z.unknown()),
+      data: z.record(z.string(), z.unknown()),
     }),
     execute: async ({ table }) => {
       console.log(`[insertRecord] Inserting into: ${table}`);
@@ -237,49 +236,55 @@ const { toolSearch, toolExecute } = createReflexTools({
 });
 
 console.log("=".repeat(80));
-console.log("REFLEX TOOLS DEMO");
+console.log("REFLEX TOOLS - TOKEN USAGE COMPARISON");
 console.log("=".repeat(80));
 console.log(`Total available tools: ${Object.keys(dummyTools).length}`);
-console.log("Tools:", Object.keys(dummyTools).join(", "));
 console.log("=".repeat(80));
 console.log();
 
-const prompt = `Check if https://example.com is reachable. If it is, fetch its content and save it to /tmp/example.html. If not reachable, write an error message to /tmp/error.log instead.`;
+const prompt = `Check if https://example.com is reachable. If it is, fetch its content and save it to /tmp/example.html.`;
 
 console.log("PROMPT:", prompt);
 console.log();
+
+// TEST 1: WITHOUT REFLEX
 console.log("=".repeat(80));
-console.log("EXECUTION:");
+console.log("TEST 1: WITHOUT REFLEX (all 20 tools in context)");
 console.log("=".repeat(80));
 
-const result = await generateText({
+const resultNoReflex = await generateText({
+  model: model,
+  tools: dummyTools,
+  prompt: prompt,
+  stopWhen: stepCountIs(5),
+});
+
+console.log("\nToken Usage (No Reflex):");
+console.log("  Total tokens:", resultNoReflex.usage.totalTokens);
+
+// TEST 2: WITH REFLEX
+console.log();
+console.log("=".repeat(80));
+console.log("TEST 2: WITH REFLEX (toolSearch + toolExecute)");
+console.log("=".repeat(80));
+
+const resultReflex = await generateText({
   model: model,
   tools: { toolSearch, toolExecute },
   prompt: prompt,
   stopWhen: stepCountIs(5),
 });
 
-console.log();
-console.log("=".repeat(80));
-console.log("RESULT:");
-console.log("=".repeat(80));
-console.log(result.text);
-console.log();
-console.log("Steps taken:", result.steps.length);
-console.log(
-  "Tool calls:",
-  result.steps.flatMap((s) => s.toolCalls.map((tc) => tc.toolName)),
-);
+console.log("\nToken Usage (With Reflex):");
+console.log("  Total tokens:", resultReflex.usage.totalTokens);
 
-console.log("\n--- STEP BREAKDOWN ---");
-result.steps.forEach((step, i) => {
-  console.log(
-    `Step ${i + 1}: ${step.toolCalls.map((tc) => tc.toolName).join(", ") || "(no tool calls)"}`,
-  );
-  step.toolCalls.forEach((tc) => {
-    const argsStr = JSON.stringify(tc.args ?? {}).substring(0, 200);
-    console.log(
-      `  ${tc.toolName}: ${argsStr}${argsStr.length >= 200 ? "..." : ""}`,
-    );
-  });
-});
+// COMPARISON
+console.log();
+console.log("=".repeat(80));
+console.log("COMPARISON");
+console.log("=".repeat(80));
+const diff = resultNoReflex.usage.totalTokens - resultReflex.usage.totalTokens;
+const pct = ((diff / resultNoReflex.usage.totalTokens) * 100).toFixed(1);
+console.log(`Without Reflex: ${resultNoReflex.usage.totalTokens} total tokens`);
+console.log(`With Reflex:    ${resultReflex.usage.totalTokens} total tokens`);
+console.log(`Savings:        ${diff} tokens (${pct}% reduction)`);
