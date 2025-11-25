@@ -13,12 +13,12 @@ export const createToolExecute = ({
 }: CreateToolExecuteOptions) =>
   tool({
     description:
-      "Execute JavaScript code with tools available as async functions. Use this to orchestrate multiple tool calls, loop over data, or combine tool results.",
+      "Execute JavaScript code with tools available as async functions. Use this to orchestrate multiple tool calls, loop over data, or combine tool results. IMPORTANT: All tool functions return objects (not primitive strings). Always access specific properties or use JSON.stringify() when you need string output.",
     inputSchema: z.object({
       code: z
         .string()
         .describe(
-          "JavaScript code to execute. Tools are available as async functions (e.g., await getWeather({ location: 'Tokyo' })). The last expression or return statement will be the result.",
+          "JavaScript code to execute. Tools are available as async functions that return objects (e.g., `const result = await fetchUrl({ url }); const html = result.content;`). Access object properties for specific values or use JSON.stringify() for string conversion. The last expression or return statement will be the result.",
         ),
     }),
     execute: async ({ code }) => {

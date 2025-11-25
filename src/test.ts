@@ -3,14 +3,7 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 import { createReflexTools } from "./createReflexTools";
 
-// =============================================================================
-// DUMMY TOOLS - A large set to demonstrate intelligent tool selection
-// =============================================================================
-
 const dummyTools = {
-  // ---------------------------------------------------------------------------
-  // Filesystem tools
-  // ---------------------------------------------------------------------------
   readFile: tool({
     description: "Read the contents of a file at the given path",
     inputSchema: z.object({ path: z.string() }),
@@ -72,9 +65,6 @@ const dummyTools = {
     },
   }),
 
-  // ---------------------------------------------------------------------------
-  // Network tools
-  // ---------------------------------------------------------------------------
   checkUrlReachable: tool({
     description: "Check if a URL is reachable and responding",
     inputSchema: z.object({ url: z.string() }),
@@ -116,7 +106,9 @@ const dummyTools = {
       message: z.string(),
     }),
     execute: async ({ channel, message }) => {
-      console.log(`[sendSlackMessage] Channel: ${channel}, Message: ${message}`);
+      console.log(
+        `[sendSlackMessage] Channel: ${channel}, Message: ${message}`,
+      );
       return { success: true };
     },
   }),
@@ -133,9 +125,6 @@ const dummyTools = {
     },
   }),
 
-  // ---------------------------------------------------------------------------
-  // Database tools (not needed for the task)
-  // ---------------------------------------------------------------------------
   queryDatabase: tool({
     description: "Execute a SQL query and return results",
     inputSchema: z.object({ sql: z.string() }),
@@ -169,9 +158,6 @@ const dummyTools = {
     },
   }),
 
-  // ---------------------------------------------------------------------------
-  // Image tools (not needed for the task)
-  // ---------------------------------------------------------------------------
   resizeImage: tool({
     description: "Resize an image to specified dimensions",
     inputSchema: z.object({
@@ -193,13 +179,13 @@ const dummyTools = {
     }),
     execute: async ({ path, format }) => {
       console.log(`[convertImageFormat] Converting ${path} to ${format}`);
-      return { success: true, outputPath: path.replace(/\.\w+$/, `.${format}`) };
+      return {
+        success: true,
+        outputPath: path.replace(/\.\w+$/, `.${format}`),
+      };
     },
   }),
 
-  // ---------------------------------------------------------------------------
-  // Utility tools
-  // ---------------------------------------------------------------------------
   getCurrentTime: tool({
     description: "Get the current date and time",
     inputSchema: z.object({}),
@@ -242,20 +228,13 @@ const dummyTools = {
   }),
 };
 
-// =============================================================================
-// CREATE REFLEX TOOLS
-// =============================================================================
-
-const model = anthropic("claude-sonnet-4-5-20250929");
+const model = anthropic("claude-sonnet-4-5");
 
 const { toolSearch, toolExecute } = createReflexTools({
   tools: dummyTools,
   model: model,
+  toolExecutionTimeout: 120000,
 });
-
-// =============================================================================
-// RUN EXAMPLE
-// =============================================================================
 
 console.log("=".repeat(80));
 console.log("REFLEX TOOLS DEMO");
@@ -289,5 +268,18 @@ console.log();
 console.log("Steps taken:", result.steps.length);
 console.log(
   "Tool calls:",
-  result.steps.flatMap((s) => s.toolCalls.map((tc) => tc.toolName))
+  result.steps.flatMap((s) => s.toolCalls.map((tc) => tc.toolName)),
 );
+
+console.log("\n--- STEP BREAKDOWN ---");
+result.steps.forEach((step, i) => {
+  console.log(
+    `Step ${i + 1}: ${step.toolCalls.map((tc) => tc.toolName).join(", ") || "(no tool calls)"}`,
+  );
+  step.toolCalls.forEach((tc) => {
+    const argsStr = JSON.stringify(tc.args ?? {}).substring(0, 200);
+    console.log(
+      `  ${tc.toolName}: ${argsStr}${argsStr.length >= 200 ? "..." : ""}`,
+    );
+  });
+});
