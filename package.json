@@ -1,9 +1,53 @@
 {
-  "name": "reflex",
-  "module": "index.ts",
+  "name": "reflex-ai",
+  "version": "0.1.0",
+  "description": "AI SDK library for smart tool selection and execution - replaces your tool list with on-demand selection and code-based orchestration",
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "ai",
+    "sdk",
+    "tools",
+    "llm",
+    "agents",
+    "anthropic",
+    "vercel-ai",
+    "tool-use"
+  ],
+  "author": "altic-dev",
+  "license": "AGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/altic-dev/Reflex.git"
+  },
+  "bugs": {
+    "url": "https://github.com/altic-dev/Reflex/issues"
+  },
+  "homepage": "https://github.com/altic-dev/Reflex#readme",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "tsup": "^8.0.0"
   },
   "peerDependencies": {
     "typescript": "^5"

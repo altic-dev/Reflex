@@ -7,13 +7,13 @@ Based on [Anthropic's advanced tool use patterns](https://www.anthropic.com/engi
 ## Install
 
 ```bash
-npm install reflex
+npm install reflex-ai
 ```
 
 ## Usage
 
 ```typescript
-import { createReflexTools } from "reflex";
+import { createReflexTools } from "reflex-ai";
 import { generateText } from "ai";
 
 const { toolSearch, toolExecute } = createReflexTools({
